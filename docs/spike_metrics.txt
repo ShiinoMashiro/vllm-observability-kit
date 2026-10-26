@@ -1,0 +1,75 @@
+vllm:admission_rejections_created
+vllm:admission_rejections_total
+vllm:cache_config_info
+vllm:e2e_request_latency_seconds_bucket
+vllm:e2e_request_latency_seconds_count
+vllm:e2e_request_latency_seconds_created
+vllm:e2e_request_latency_seconds_sum
+vllm:engine_sleep_state
+vllm:estimated_flops_per_gpu_created
+vllm:estimated_flops_per_gpu_total
+vllm:estimated_read_bytes_per_gpu_created
+vllm:estimated_read_bytes_per_gpu_total
+vllm:estimated_write_bytes_per_gpu_created
+vllm:estimated_write_bytes_per_gpu_total
+vllm:external_prefix_cache_hits_created
+vllm:external_prefix_cache_hits_total
+vllm:external_prefix_cache_queries_created
+vllm:external_prefix_cache_queries_total
+vllm:generation_tokens_created
+vllm:generation_tokens_total
+vllm:inter_token_latency_seconds_bucket
+vllm:inter_token_latency_seconds_count
+vllm:inter_token_latency_seconds_created
+vllm:inter_token_latency_seconds_sum
+vllm:iteration_tokens_total_bucket
+vllm:iteration_tokens_total_count
+vllm:iteration_tokens_total_created
+vllm:iteration_tokens_total_sum
+vllm:kv_cache_usage_perc
+vllm:mm_cache_hits_created
+vllm:mm_cache_hits_total
+vllm:mm_cache_queries_created
+vllm:mm_cache_queries_total
+vllm:num_preemptions_created
+vllm:num_preemptions_total
+vllm:num_requests_running
+vllm:num_requests_waiting
+vllm:num_requests_waiting_by_reason
+vllm:prefix_cache_hits_created
+vllm:prefix_cache_hits_total
+vllm:prefix_cache_queries_created
+vllm:prefix_cache_queries_total
+vllm:prompt_tokens_by_source_created
+vllm:prompt_tokens_by_source_total
+vllm:prompt_tokens_cached_by_source_created
+vllm:prompt_tokens_cached_by_source_total
+vllm:prompt_tokens_cached_created
+vllm:prompt_tokens_cached_total
+vllm:prompt_tokens_created
+vllm:prompt_tokens_total
+vllm:request_decode_time_seconds_bucket
+vllm:request_decode_time_seconds_count
+vllm:request_decode_time_seconds_created
+vllm:request_decode_time_seconds_sum
+vllm:request_generation_tokens_bucket
+vllm:request_generation_tokens_count
+vllm:request_generation_tokens_created
+vllm:request_generation_tokens_sum
+vllm:request_inference_time_seconds_bucket
+vllm:request_inference_time_seconds_count
+vllm:num_requests_running{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:num_requests_waiting{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B",reason="deferred"} 0.0
+vllm:prefix_cache_queries_total{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 9.0
+vllm:prefix_cache_queries_created{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 1.7930382746884444e+09
+vllm:prefix_cache_hits_total{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:prefix_cache_hits_created{engine="0",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 1.7930382746884677e+09
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.001",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.005",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.01",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.02",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.04",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.06",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
+vllm:time_to_first_token_seconds_bucket{engine="0",le="0.08",model_name="/home/yaojun/huggingface/Qwen3-1.7B"} 0.0
