@@ -1,0 +1,4 @@
+records/
+incidents/
+__pycache__/
+*.egg-info/

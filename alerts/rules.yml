@@ -1,0 +1,75 @@
+# vLLM SLO 告警规则 —— 每条规则对应一类真实故障模式
+# 来源:《GLM5.2 大规模集群推理实践》踩坑清单 + 本机 BASELINE 实证
+# SLO 锚点:TTFT P50≤5s(200K 内)/ TPOT≤50ms / P95 与 P50 gap≤1 倍 / prefix 命中率不骤降
+groups:
+  - name: vllm-slo
+    rules:
+      # ── 延迟 SLO ─────────────────────────────────────────────
+      - alert: VLLMTTFTHigh
+        expr: histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le)) > 5
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "TTFT P95 超 5s"
+          fail_mode: "长输入 prefill bound(文章:未命中超长请求血亏,需限流)或调度积压"
+
+      - alert: VLLMTPOTHugh
+        expr: histogram_quantile(0.95, sum(rate(vllm:inter_token_latency_seconds_bucket[5m])) by (le)) > 0.05
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "TPOT P95 超 50ms"
+          fail_mode: "decode 算力饱和(batch 过大)/ host 侧回读开销 / 显存换页"
+
+      - alert: VLLMP95P50GapWide
+        expr: |
+          histogram_quantile(0.95, sum(rate(vllm:e2e_request_latency_seconds_bucket[5m])) by (le))
+            / clamp_min(histogram_quantile(0.50, sum(rate(vllm:e2e_request_latency_seconds_bucket[5m])) by (le)), 0.001) > 2
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "E2E 延迟 P95/P50 gap 超 2 倍"
+          fail_mode: "长尾请求混入(文章:按长度分桶调度是解法)/ 个别实例拖慢整体"
+
+      # ── 队列与容量 ───────────────────────────────────────────
+      - alert: VLLMQueueBacklog
+        expr: min_over_time(vllm:num_requests_waiting[5m]) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "持续存在排队请求(5m 内 waiting 始终>0)"
+          fail_mode: "调度积压:并发超容量(本机实证:1.7B@8GB batch≈32 计算饱和)"
+
+      - alert: VLLMKVCacheWaterHigh
+        expr: vllm:kv_cache_usage_perc > 0.9
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "KV cache 水位 >90%"
+          fail_mode: "抢占风暴前兆(文章:KV 是一切的中心)"
+
+      - alert: VLLMPreemptionStorm
+        expr: increase(vllm:num_preemptions_total[10m]) > 0
+        labels: {severity: critical}
+        annotations:
+          summary: "10 分钟内发生 preemption"
+          fail_mode: "KV 不足触发抢占-重算循环,吞吐崩塌"
+
+      # ── 命中率与异常 ─────────────────────────────────────────
+      - alert: VLLMPrefixHitDrop
+        expr: |
+          sum(rate(vllm:prefix_cache_hits_total[10m]))
+            / clamp_min(sum(rate(vllm:prefix_cache_queries_total[10m])), 0.001) < 0.5
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "prefix 命中率 <50%(agent 场景预期 90%+)"
+          fail_mode: "缓存被 evict / 路由失配(文章:开 overlap 后 prefetch 被 evict 的同款问题)"
+
+      - alert: VLLMEngineDown
+        expr: up{job="vllm"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "vLLM server 不可达"
+          fail_mode: "进程退出/整机 hang(配合 watchdog 的 py-spy 黑匣子定位)"

@@ -1,0 +1,17 @@
+# Prometheus 抓取与告警配置(单机版)
+# 启动:prometheus --config.file=prometheus.yml(需先建 data/ 目录或用 --storage.tsdb.path)
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - alerts/rules.yml
+
+scrape_configs:
+  - job_name: vllm
+    static_configs:
+      # WSL2 注意:127.0.0.1 可能拒连,用 eth0 IP(hostname -I)
+      - targets: ["192.168.1.4:8000"]
+  - job_name: nvml-gpu
+    static_configs:
+      - targets: ["192.168.1.4:9835"]
