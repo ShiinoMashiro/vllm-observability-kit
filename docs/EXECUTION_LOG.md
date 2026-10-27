@@ -65,3 +65,15 @@
 # 压测/注入                curl 经 :9000 代理发请求;python tools/fault_injector.py hang/error/longinput
 # 取证                     python -m forensics.cli --session records/demo1 --request-id <id>
 ```
+
+## 6. 补充验证(2026-10-28):监控栈闭环
+
+| 步骤 | 命令 | 结果 |
+| --- | --- | --- |
+| Grafana dashboard | `dashboards/vllm-slo-dashboard.json`(9 面板,SLO 四件套) | ✅ JSON 校验通过 |
+| 告警规则校验 | `promtool check rules alerts/rules.yml` | ✅ SUCCESS: 8 rules |
+| Prometheus 实跑 | `prometheus --config.file=prometheus.yml`(45s) | ✅ targets: vllm=up, nvml-gpu=up |
+| 即时查询 | `/api/v1/query` | ✅ vllm:num_requests_running / gpu_utilization 均返回数据 |
+
+监控链路至此闭环:引擎/进程指标 → Prometheus 抓取与规则评估 → Grafana 面板(待导入)→ 告警。
+复现:prometheus 二进制在 /tmp/prom(建议移入固定路径);Grafana 导入 dashboard JSON 后配置 Prometheus 数据源。

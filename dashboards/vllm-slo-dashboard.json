@@ -1,0 +1,128 @@
+{
+  "title": "vLLM SLO Dashboard",
+  "uid": "vllm-slo-1",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "tags": ["vllm", "slo"],
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(vllm:generation_tokens_total, job)",
+        "refresh": 1,
+        "includeAll": false,
+        "current": { "selected": true, "text": "vllm", "value": "vllm" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "聚合吞吐 tokens/s",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(vllm:generation_tokens_total{job=\"$job\"}[1m]))", "legendFormat": "tokens/s" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "id": 2,
+      "title": "并发:running / waiting",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "vllm:num_requests_running{job=\"$job\"}", "legendFormat": "running" },
+        { "expr": "vllm:num_requests_waiting{job=\"$job\"}", "legendFormat": "waiting" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 3,
+      "title": "KV cache 利用率(>90% 告警)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "vllm:kv_cache_usage_perc{job=\"$job\"}", "legendFormat": "usage" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.8 }, { "color": "red", "value": 0.9 } ] } }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "title": "TTFT P50 / P95(秒,SLO P50≤5s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(vllm:time_to_first_token_seconds_bucket{job=\"$job\"}[5m])) by (le))", "legendFormat": "P50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket{job=\"$job\"}[5m])) by (le))", "legendFormat": "P95" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "title": "TPOT P50 / P95(秒,SLO ≤50ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(vllm:inter_token_latency_seconds_bucket{job=\"$job\"}[5m])) by (le))", "legendFormat": "P50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(vllm:inter_token_latency_seconds_bucket{job=\"$job\"}[5m])) by (le))", "legendFormat": "P95" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 6,
+      "title": "E2E 延迟 P95/P50 gap(>2 告警)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(vllm:e2e_request_latency_seconds_bucket{job=\"$job\"}[5m])) by (le)) / clamp_min(histogram_quantile(0.50, sum(rate(vllm:e2e_request_latency_seconds_bucket{job=\"$job\"}[5m])) by (le)), 0.001)", "legendFormat": "gap" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 2 }, { "color": "red", "value": 3 } ] } }, "overrides": [] }
+    },
+    {
+      "id": 7,
+      "title": "prefix 命中率",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(rate(vllm:prefix_cache_hits_total{job=\"$job\"}[10m])) / clamp_min(sum(rate(vllm:prefix_cache_queries_total{job=\"$job\"}[10m])), 0.001)", "legendFormat": "hit rate" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1 }, "overrides": [] }
+    },
+    {
+      "id": 8,
+      "title": "preemptions(10m 增量,>0 critical)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "increase(vllm:num_preemptions_total{job=\"$job\"}[10m])", "legendFormat": "preemptions" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 9,
+      "title": "GPU(来自 nvml exporter)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "gpu_utilization", "legendFormat": "SM util %" },
+        { "expr": "gpu_memory_used_bytes / gpu_memory_total_bytes", "legendFormat": "mem used %" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    }
+  ]
+}
