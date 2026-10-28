@@ -42,7 +42,7 @@ def diagnose(req: dict, metrics_win: list[dict], gpu_win: list[dict], incidents:
     if preem and max(preem) > min(preem):
         findings.append("[容量] 窗口内发生 preemption → KV 不足,抢占-重算循环")
     gpu_utils = [g.get("gpu_utilization", 0) for g in gpu_win]
-    if gpu_utils and lat > 2 and sum(gpu_utils) / len(gpu_utils) < 50:
+    if gpu_utils and lat > 5 and sum(gpu_utils) / len(gpu_utils) < 50:
         findings.append(f"[host] GPU 平均利用率 {sum(gpu_utils)/len(gpu_utils):.0f}% 偏低 → host/同步瓶颈嫌疑")
     for inc in incidents:
         if req["ts_start"] - 5 <= inc.get("ts", 0) <= req.get("ts_end", 0) + 5:
